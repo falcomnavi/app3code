@@ -17,6 +17,9 @@ import 'dart:io';
 import 'dart:math';
 import 'product_details_screen.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:flutter/material.dart';
+
+
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -99,6 +102,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 
   @override
+
   Widget build(BuildContext context) {
     if (_isLoading) {
     return Scaffold(

@@ -435,9 +435,9 @@ class PdfGenerator {
       return pw.BoxDecoration(
         boxShadow: [
           pw.BoxShadow(
-            color: PdfColors.black.withOpacity(shadowOpacity),
+            color: PdfColor.fromInt(Colors.black.withOpacity(shadowOpacity).value),
             blurRadius: 5,
-            offset: const pw.Offset(2, 2),
+            offset: const pw.Point(2, 2),
           ),
         ],
       );
@@ -468,13 +468,13 @@ class PdfGenerator {
         data: qrCodeData,
         version: QrVersions.auto,
         gapless: false,
-        color: ui.Color(textColor.value),
-        emptyColor: ui.Color(secondaryColor.value),
+        color: ui.Color(textColorInt),
+        emptyColor: ui.Color(secondaryColorInt),
       );
       final qrImage = qr.toImageData(200);
       if (qrImage == null) return null;
       return pw.Image(
-        pw.MemoryImage(qrImage.buffer.asUint8List()),
+        pw.MemoryImage((await qrImage).buffer.asUint8List()),
         width: 100,
         height: 100,
       );
@@ -568,9 +568,9 @@ class PdfGenerator {
           boxShadow: showShadow
               ? [
                   pw.BoxShadow(
-                    color: PdfColors.black.withOpacity(shadowOpacity),
+                    color: PdfColor.fromInt(Colors.black.withOpacity(shadowOpacity).value),
                     blurRadius: 5,
-                    offset: const pw.Offset(2, 2),
+                    offset: const pw.Point(2, 2),
                   ),
                 ]
               : null,
@@ -582,7 +582,7 @@ class PdfGenerator {
               pw.Image(
                 pw.MemoryImage(File(imagePath).readAsBytesSync()),
                 width: double.infinity,
-                height: 200 * imageSize,
+                height: 200.0 * (imageSize as double),
                 fit: pw.BoxFit.cover,
               ),
             pw.Padding(
@@ -744,7 +744,7 @@ class PdfGenerator {
       for (var i = 0; i < totalPages; i++) {
         final start = i * productsPerPage;
         final end = (start + productsPerPage > products.length) ? products.length : start + productsPerPage;
-        final pageProducts = products.sublist(start, end);
+        final pageProducts = products.sublist(start.toInt(), end.toInt());
 
         pdf.addPage(
           pw.Page(

@@ -11,6 +11,13 @@ import 'utils/calculator.dart';
 import 'providers/product_provider.dart';
 import 'providers/template_provider.dart';
 import 'theme/app_theme.dart';
+import 'package:photo_view/photo_view.dart';
+import 'package:photo_view/photo_view_gallery.dart';
+import 'package:math_expressions/math_expressions.dart';
+
+
+
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

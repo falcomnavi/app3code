@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:math_expressions/math_expressions.dart';
 
-
 class CalculatorScreen extends StatefulWidget {
   const CalculatorScreen({Key? key}) : super(key: key);
 
@@ -18,9 +17,9 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
     '7', '8', '9', '*',
     '4', '5', '6', '-',
     '1', '2', '3', '+',
-    '0', '.', '=', 
+    '0', '.', '=',
   ];
-}
+
   void _onButtonPressed(String value) {
     setState(() {
       if (value == 'C') {
@@ -51,16 +50,52 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
     final color = isOperator ? Colors.orange.shade700 : Colors.grey.shade800;
 
     return ElevatedButton(
-    onPressed: () => _onButtonPressed(value),
-    style: ElevatedButton.styleFrom(
-      backgroundColor: color,
-      foregroundColor: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      padding: const EdgeInsets.all(20),
-    ),
-    child: Text(
-      value,
-      style: const TextStyle(fontSize: 22),
-    ),
-  );
+      onPressed: () => _onButtonPressed(value),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color,
+        padding: const EdgeInsets.all(20),
+      ),
+      child: Text(
+        value,
+        style: const TextStyle(fontSize: 22),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(title: const Text('Calculadora')),
+      body: Column(
+        children: [
+          Expanded(
+            child: Container(
+              alignment: Alignment.bottomRight,
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Text(_input, style: const TextStyle(fontSize: 24, color: Colors.white)),
+                  Text(_result, style: const TextStyle(fontSize: 48, color: Colors.white)),
+                ],
+              ),
+            ),
+          ),
+          GridView.builder(
+            shrinkWrap: true,
+            itemCount: buttons.length,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 4,
+              mainAxisSpacing: 1,
+              crossAxisSpacing: 1,
+            ),
+            itemBuilder: (context, index) {
+              return _buildButton(buttons[index]);
+            },
+          ),
+        ],
+      ),
+    );
+  }
 }

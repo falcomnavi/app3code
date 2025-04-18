@@ -18,7 +18,7 @@ class TemplateEditorScreen extends StatefulWidget {
 }
 
 class _TemplateEditorScreenState extends State<TemplateEditorScreen> {
-  Color _textColor = Colors.black;
+  Color _textColor = Colors.black;  
   final _templateBox = Hive.box('templates');
   final List<Map<String, dynamic>> _presets = [];
   String _currentPresetName = '';
