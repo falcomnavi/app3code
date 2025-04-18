@@ -18,7 +18,7 @@ import 'dart:math';
 import 'product_details_screen.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:flutter/material.dart';
-
+import '../utils/calculator.dart';
 
 
 class HomeScreen extends StatefulWidget {
@@ -334,6 +334,37 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 );
               },
             ),
+
+            ListTile(
+              title: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.blue, Colors.purple],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                  ),
+                  onPressed: () {
+                    // Navegar para a Calculadora
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => Calculator()),
+                    );
+                  },
+                  child: Text(
+                    'Calculator',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ),
+            ),
+
           ],
         ),
       ),
@@ -894,6 +925,20 @@ class _HomeAction extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class Calculator extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Calculator'),
+      ),
+      body: Center(
+        child: Text('Calculator Screen'),
       ),
     );
   }
