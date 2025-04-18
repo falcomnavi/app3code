@@ -364,6 +364,8 @@ class PdfGenerator {
     final primaryColor = PdfColor.fromInt(templateBox.get('primaryColor', defaultValue: Colors.blue.value));
     final secondaryColor = PdfColor.fromInt(templateBox.get('secondaryColor', defaultValue: Colors.grey.value));
     final textColor = PdfColor.fromInt(templateBox.get('textColor', defaultValue: Colors.black.value));
+    final textColorInt = templateBox.get('textColor', defaultValue: Colors.black.value);
+    final secondaryColorInt = templateBox.get('secondaryColor', defaultValue: Colors.grey.value);
     final showPrice = templateBox.get('showPrice', defaultValue: true);
     final showCategory = templateBox.get('showCategory', defaultValue: true);
     final showInfo = templateBox.get('showInfo', defaultValue: true);
@@ -437,7 +439,7 @@ class PdfGenerator {
           pw.BoxShadow(
             color: PdfColor.fromInt(Colors.black.withOpacity(shadowOpacity).value),
             blurRadius: 5,
-            offset: const pw.Point(2, 2),
+            offset: PdfPoint(2, 2), // Corrigido: mudado de pw.Point para PdfPoint
           ),
         ],
       );
@@ -461,9 +463,10 @@ class PdfGenerator {
       );
     }
 
-    // Função para criar QR Code
-    pw.Widget? createQRCode() {
+    // Função para criar QR Code - tornado assíncrono
+    Future<pw.Widget?> createQRCode() async {
       if (!showQRCode || qrCodeData == null) return null;
+      
       final qr = QrPainter(
         data: qrCodeData,
         version: QrVersions.auto,
@@ -471,10 +474,12 @@ class PdfGenerator {
         color: ui.Color(textColorInt),
         emptyColor: ui.Color(secondaryColorInt),
       );
-      final qrImage = qr.toImageData(200);
-      if (qrImage == null) return null;
+      
+      final qrImageData = await qr.toImageData(200);
+      if (qrImageData == null) return null;
+      
       return pw.Image(
-        pw.MemoryImage((await qrImage).buffer.asUint8List()),
+        pw.MemoryImage(qrImageData.buffer.asUint8List()),
         width: 100,
         height: 100,
       );
@@ -570,7 +575,7 @@ class PdfGenerator {
                   pw.BoxShadow(
                     color: PdfColor.fromInt(Colors.black.withOpacity(shadowOpacity).value),
                     blurRadius: 5,
-                    offset: const pw.Point(2, 2),
+                    offset: PdfPoint(2, 2), // Corrigido: mudado de pw.Point para PdfPoint
                   ),
                 ]
               : null,
@@ -678,7 +683,7 @@ class PdfGenerator {
               value = product['code'] ?? product['codigo'] ?? '';
               break;
             case 'informações':
-              value = product['info'] ?? product['informacao'] ?? '';
+              value = product['additionalInfo'] ?? product['informacao'] ?? '';
               break;
           }
           return pw.Container(
@@ -706,46 +711,15 @@ class PdfGenerator {
       );
     }
 
-    // Adicionar páginas ao PDF
-    if (layoutStyle == 'table') {
-      pdf.addPage(
-        pw.Page(
-          pageFormat: PdfPageFormat.a4,
-          build: (context) {
-            return pw.Stack(
-              children: [
-                if (backgroundImage != null)
-                  pw.Opacity(
-                    opacity: backgroundOpacity,
-                    child: pw.Image(
-                      backgroundImage,
-                      width: double.infinity,
-                      height: double.infinity,
-                      fit: pw.BoxFit.cover,
-                    ),
-                  ),
-                if (showHeader) createHeader(),
-                pw.Padding(
-                  padding: const pw.EdgeInsets.all(20),
-                  child: createProductTable(),
-                ),
-                if (showFooter) createFooter(),
-                if (showWatermark) createWatermark()!,
-                if (showQRCode) createQRCode()!,
-              ],
-            );
-          },
-        ),
-      );
-    } else {
-      final productsPerPage = columns * 2;
-      final totalPages = (products.length / productsPerPage).ceil();
+    // Modificada para lidar com o QR Code assíncrono
+    Future<void> addPagesToDocument() async {
+      // Preparar QR Code antecipadamente se necessário
+      pw.Widget? qrCodeWidget;
+      if (showQRCode) {
+        qrCodeWidget = await createQRCode();
+      }
 
-      for (var i = 0; i < totalPages; i++) {
-        final start = i * productsPerPage;
-        final end = (start + productsPerPage > products.length) ? products.length : start + productsPerPage;
-        final pageProducts = products.sublist(start.toInt(), end.toInt());
-
+      if (layoutStyle == 'table') {
         pdf.addPage(
           pw.Page(
             pageFormat: PdfPageFormat.a4,
@@ -765,29 +739,71 @@ class PdfGenerator {
                   if (showHeader) createHeader(),
                   pw.Padding(
                     padding: const pw.EdgeInsets.all(20),
-                    child: layoutStyle == 'grid'
-                        ? pw.GridView(
-                            crossAxisCount: columns,
-                            children: pageProducts.map((product) => createProductCard(product)).toList(),
-                          )
-                        : pw.Column(
-                            children: pageProducts.map((product) => createProductCard(product)).toList(),
-                          ),
+                    child: createProductTable(),
                   ),
                   if (showFooter) createFooter(),
                   if (showWatermark) createWatermark()!,
-                  if (showQRCode) createQRCode()!,
+                  if (qrCodeWidget != null) qrCodeWidget,
                 ],
               );
             },
           ),
         );
+      } else {
+        final productsPerPage = columns * 2;
+        final totalPages = (products.length / productsPerPage).ceil();
+
+        for (var i = 0; i < totalPages; i++) {
+          final start = i * productsPerPage;
+          final end = (start + productsPerPage > products.length) ? products.length : start + productsPerPage;
+          final pageProducts = products.sublist(start.toInt(), end.toInt());
+
+          pdf.addPage(
+            pw.Page(
+              pageFormat: PdfPageFormat.a4,
+              build: (context) {
+                return pw.Stack(
+                  children: [
+                    if (backgroundImage != null)
+                      pw.Opacity(
+                        opacity: backgroundOpacity,
+                        child: pw.Image(
+                          backgroundImage,
+                          width: double.infinity,
+                          height: double.infinity,
+                          fit: pw.BoxFit.cover,
+                        ),
+                      ),
+                    if (showHeader) createHeader(),
+                    pw.Padding(
+                      padding: const pw.EdgeInsets.all(20),
+                      child: layoutStyle == 'grid'
+                          ? pw.GridView(
+                              crossAxisCount: columns,
+                              children: pageProducts.map((product) => createProductCard(product)).toList(),
+                            )
+                          : pw.Column(
+                              children: pageProducts.map((product) => createProductCard(product)).toList(),
+                            ),
+                    ),
+                    if (showFooter) createFooter(),
+                    if (showWatermark) createWatermark()!,
+                    if (qrCodeWidget != null) qrCodeWidget,
+                  ],
+                );
+              },
+            ),
+          );
+        }
       }
     }
 
+    // Adicionar páginas ao PDF
+    await addPagesToDocument();
+
     // Salvar e compartilhar o PDF
     final output = await getTemporaryDirectory();
-  final file = File('${output.path}/catalogo.pdf');
+    final file = File('${output.path}/catalogo.pdf');
   await file.writeAsBytes(await pdf.save());
 
     return file.path;
